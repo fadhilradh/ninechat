@@ -190,11 +190,13 @@ export async function* streamChat(request: ChatRequest): AsyncGenerator<StreamEv
 
   yield { type: "meta", model }
   let finishReason: string | null = null
+  let servedBy = model
 
   for await (const payload of readSse(response.body)) {
     if (!payload || payload === "[DONE]") continue
 
     let chunk: {
+      model?: string
       choices?: Array<{ delta?: { content?: string }; finish_reason?: string | null }>
       usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }
     }
@@ -202,6 +204,12 @@ export async function* streamChat(request: ChatRequest): AsyncGenerator<StreamEv
       chunk = JSON.parse(payload)
     } catch {
       continue
+    }
+
+    // A gateway that fell back answers as a different model than we asked for.
+    if (chunk.model && chunk.model !== servedBy) {
+      servedBy = chunk.model
+      yield { type: "meta", model: chunk.model }
     }
 
     const text = chunk.choices?.[0]?.delta?.content

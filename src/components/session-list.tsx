@@ -78,7 +78,7 @@ export function SessionList({
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      size="iconSm"
+                      size="icon-sm"
                       aria-label={`Actions for ${session.title}`}
                       className={cn(
                         "shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100",

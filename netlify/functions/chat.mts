@@ -48,6 +48,14 @@ export default async (request: Request): Promise<Response> => {
   }
 
   const model = payload.model?.trim() || settings.defaultModel
+
+  /**
+   * The chosen model first, then the configured fallbacks. OpenRouter walks
+   * this list on a 429 or a provider error and serves from the first one that
+   * answers, so a rate-limited primary degrades to a free model instead of
+   * failing the request.
+   */
+  const chain = [model, ...settings.fallbackModels.filter((m) => m !== model)]
   const abort = new AbortController()
 
   // Propagate the browser hanging up (the Stop button) to the gateway, so a
@@ -66,6 +74,11 @@ export default async (request: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         model,
+        // Omitted entirely when no fallbacks are configured: a gateway that
+        // does not understand these fields should never have to ignore them.
+        ...(chain.length > 1
+          ? { models: chain, provider: { allow_fallbacks: true } }
+          : {}),
         messages: payload.messages,
         temperature: payload.temperature ?? 0.7,
         max_tokens: settings.maxTokens,
@@ -99,8 +112,17 @@ export default async (request: Request): Promise<Response> => {
       send({ type: "meta", model })
 
       let finishReason: string | null = null
+      let servedBy = model
       try {
         for await (const chunk of readOpenAiStream(body)) {
+          // On a fallback the reply comes from a different model than we
+          // asked for. Say so, rather than mislabelling it in the transcript.
+          const actual = typeof chunk.model === "string" ? chunk.model : null
+          if (actual && actual !== servedBy) {
+            servedBy = actual
+            send({ type: "meta", model: actual })
+          }
+
           const choices = chunk.choices as
             | Array<{ delta?: { content?: string }; finish_reason?: string | null }>
             | undefined

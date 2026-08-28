@@ -96,7 +96,12 @@ export function useChat({ session, onSessionChanged }: Options): ChatState {
         })) {
           switch (event.type) {
             case "meta":
+              // Arrives again mid-stream when a fallback model took over, so
+              // this has to reach state rather than just the local object.
               assistant.model = event.model
+              setMessages((prev) =>
+                prev.map((m) => (m.id === assistant.id ? { ...m, model: event.model } : m))
+              )
               break
             case "delta":
               content += event.text

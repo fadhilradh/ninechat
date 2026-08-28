@@ -49,7 +49,7 @@ export function CopyButton({ value, className, label, variant = "ghost" }: CopyB
     <Button
       type="button"
       variant={variant}
-      size={label ? "sm" : "iconSm"}
+      size={label ? "sm" : "icon-sm"}
       onClick={copy}
       aria-label={copied ? "Copied" : "Copy"}
       className={cn("text-muted-foreground hover:text-foreground", className)}

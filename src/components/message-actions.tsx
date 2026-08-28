@@ -31,7 +31,7 @@ function IconAction({
         <Button
           type="button"
           variant="ghost"
-          size="iconSm"
+          size="icon-sm"
           onClick={onClick}
           disabled={disabled}
           aria-label={label}

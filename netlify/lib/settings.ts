@@ -41,6 +41,19 @@ export const settings = {
 
   /** Upper bound on tokens per reply; keeps a runaway model inside the 60s streaming budget. */
   maxTokens: Number(str("MAX_TOKENS", "4096")),
+
+  /**
+   * Ordered fallback chain, tried when the chosen model errors out or is rate
+   * limited. Put the free ones last and you get 9Router's tiered behaviour on
+   * a gateway that does not have it built in.
+   *
+   * This rides on OpenRouter's `models` field. Empty by default, because a
+   * gateway that does not understand the field is better off never seeing it.
+   */
+  fallbackModels: str("FALLBACK_MODELS")
+    .split(",")
+    .map((model) => model.trim())
+    .filter(Boolean),
 } as const
 
 export interface Upstream {

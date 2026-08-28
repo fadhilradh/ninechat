@@ -62,7 +62,7 @@ export function Sidebar({
           <Wordmark className="flex-1" />
           <Button
             variant="ghost"
-            size="iconSm"
+            size="icon-sm"
             onClick={onClose}
             aria-label="Close chat list"
             className="lg:hidden"

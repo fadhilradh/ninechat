@@ -1,0 +1,4 @@
+dist
+.netlify
+node_modules
+public/*.png

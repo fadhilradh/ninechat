@@ -13,6 +13,7 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { MadeBy } from "@/components/made-by"
 import { Wordmark } from "@/components/wordmark"
 
 const FEATURES = [
@@ -44,7 +45,7 @@ const FEATURES = [
   {
     icon: Lock,
     title: "Your chats stay yours",
-    body: "Conversations are stored in your own browser, not on a server. Clearing them is a button, not a support ticket.",
+    body: "Conversations are stored in your own browser. Sign in and they follow you to your other devices; either way, clearing them is a button, not a support ticket.",
   },
   {
     icon: MonitorSmartphone,
@@ -72,7 +73,7 @@ const STEPS = [
   {
     step: "03",
     title: "Come back whenever",
-    body: "Your conversations are waiting in this browser. Make an account later only if you want one.",
+    body: "Your conversations are waiting in this browser. Make an account whenever you want them on another device too.",
   },
 ]
 
@@ -168,8 +169,8 @@ export function LandingPage() {
         </h2>
         <p className="mt-4 text-muted-foreground">
           There is no billing to build because there is nothing to bill for. Open Chat keeps your
-          conversations in your own browser, so there are no accounts to store, no transcripts to
-          host, and no per-seat cost to recover. It is a chatbot, not a funnel.
+          conversations in your own browser, syncs them to your account only if you make one, and
+          has no per-seat cost to recover. It is a chatbot, not a funnel.
         </p>
         <Button size="lg" className="mt-8" asChild>
           <Link to="/chat">
@@ -193,6 +194,9 @@ export function LandingPage() {
               Sign up
             </Link>
           </nav>
+        </div>
+        <div className="border-t px-4 py-5">
+          <MadeBy />
         </div>
       </footer>
     </main>

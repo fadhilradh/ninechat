@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import { ArrowRight, Boxes, Database, GitBranch, Server } from "lucide-react"
 
+import { MadeBy } from "@/components/made-by"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
@@ -17,8 +18,8 @@ const STACK = [
   },
   {
     icon: Database,
-    title: "Your browser is the database",
-    body: "Conversations live in IndexedDB on the device you typed them on. The server stores no transcripts, which is why no account is needed to use it.",
+    title: "Local first, synced if you ask",
+    body: "Conversations are written to your browser as you type them, which is why no account is needed to use it. Sign in and a copy is kept with your account so the same chats open on your other devices.",
   },
   {
     icon: GitBranch,
@@ -42,7 +43,7 @@ const FAQ = [
   },
   {
     q: "Where do my conversations live?",
-    a: "In your browser's IndexedDB, on the device you typed them on. They are not uploaded, not backed up, and not readable by the server. Clearing site data deletes them for good.",
+    a: "In your browser's IndexedDB, on the device you typed them on. Without an account that is the only copy, so clearing site data deletes them for good. If you sign in, a copy of the text is also saved to your account and kept in step across your devices; deleting a chat deletes both copies.",
   },
   {
     q: "Are there message limits?",
@@ -50,7 +51,7 @@ const FAQ = [
   },
   {
     q: "What happens to images I attach?",
-    a: "They are resized to fit within 1568px and re-encoded in the browser, then sent inline with the message. The resized copy is stored alongside the chat in IndexedDB.",
+    a: "They are resized to fit within 1568px and re-encoded in the browser, then sent inline with the message. The resized copy is stored alongside the chat in IndexedDB. Images are the one thing that never syncs: they stay on the device that picked them, and your other devices see only that an image was part of the exchange.",
   },
 ]
 
@@ -69,12 +70,12 @@ export function AboutPage() {
         <p className="leading-relaxed text-muted-foreground">
           Most chat apps want an account before they will answer a single question, then keep the
           transcript. Open Chat asks for neither. There is no sign-up wall, and the conversations
-          sit in your own browser storage rather than on a server.
+          sit in your own browser storage unless you sign in and ask for them to follow you.
         </p>
         <p className="leading-relaxed text-muted-foreground">
           That is what makes &ldquo;free forever&rdquo; honest rather than a countdown. There is no
-          per-seat cost to recover, because there is no seat -- the deploy holds no transcripts,
-          runs no background jobs, and stores nothing per user unless you choose to sign in.
+          per-seat cost to recover, because there is no seat -- the deploy runs no background
+          jobs and stores nothing per user unless you choose to sign in.
         </p>
       </section>
 
@@ -120,6 +121,8 @@ export function AboutPage() {
           <Link to="/auth?mode=signup">Create an account</Link>
         </Button>
       </div>
+
+      <MadeBy className="justify-start pt-4" />
     </main>
   )
 }

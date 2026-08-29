@@ -18,14 +18,15 @@ function bool(name: string, fallback = false): boolean {
 
 export const settings = {
   /**
-   * An OpenAI-compatible base URL. 9Router exposes one at /v1.
+   * Any OpenAI-compatible base URL: OpenRouter, a self-hosted 9Router, or a
+   * provider's own endpoint. Nothing here is specific to one of them.
    *
    * Note this is resolved server-side, so it has to be reachable *from
-   * Netlify*. A 9Router running on your own laptop is not -- use the
-   * frontend's Direct mode for that, which talks to localhost from the browser
-   * and skips this function entirely.
+   * Netlify*. A gateway running on your own laptop is not -- use the
+   * frontend's Direct mode for that, which talks to it from the browser and
+   * skips this function entirely.
    */
-  baseUrl: str("GATEWAY_BASE_URL", "http://localhost:20128/v1").replace(/\/+$/, ""),
+  baseUrl: str("GATEWAY_BASE_URL", "https://openrouter.ai/api/v1").replace(/\/+$/, ""),
   apiKey: str("GATEWAY_API_KEY"),
   defaultModel: str("DEFAULT_MODEL", "anthropic/claude-sonnet-4-5"),
 
@@ -44,8 +45,8 @@ export const settings = {
 
   /**
    * Ordered fallback chain, tried when the chosen model errors out or is rate
-   * limited. Put the free ones last and you get 9Router's tiered behaviour on
-   * a gateway that does not have it built in.
+   * limited. Put the free ones last and you get 9Router-style tiered routing
+   * on a gateway that does not have it built in.
    *
    * This rides on OpenRouter's `models` field. Empty by default, because a
    * gateway that does not understand the field is better off never seeing it.

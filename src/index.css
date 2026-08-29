@@ -7,6 +7,28 @@
 /* The app is pinned to dark via a class on <html>, not a media query. */
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-sans:
+    "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:
+    "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* One notch up from Tailwind's defaults across the board. Chat is reading,
+     not scanning a dashboard, and 14px body text is tiring at length. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: calc(1.125 / 0.8125);
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: calc(1.375 / 0.9375);
+  --text-base: 1.0625rem;
+  --text-base--line-height: calc(1.625 / 1.0625);
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: calc(1.8125 / 1.1875);
+  --text-xl: 1.3125rem;
+  --text-xl--line-height: calc(1.875 / 1.3125);
+  --text-2xl: 1.625rem;
+  --text-2xl--line-height: calc(2.125 / 1.625);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -89,6 +111,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   html,

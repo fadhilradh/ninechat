@@ -49,9 +49,10 @@ export interface Session {
  * Where the browser sends completions.
  *
  * `proxy` goes through the Netlify function, which holds the key server-side.
- * `direct` goes straight from the browser to a gateway you can reach yourself
- * -- the only option that works with a 9Router on localhost, because a
- * function running in Netlify's cloud cannot see your machine.
+ * `direct` goes straight from the browser to a gateway you can reach yourself.
+ * Direct is the only option that works with a gateway on localhost, because a
+ * function running in Netlify's cloud cannot see your machine -- but it also
+ * means the key is held in this browser and sent from it.
  */
 export type TransportMode = "proxy" | "direct"
 
@@ -68,7 +69,8 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   transport: "proxy",
-  directBaseUrl: "http://localhost:20128/v1",
+  // Seeded from the deploy's own gateway on first load; this is the fallback.
+  directBaseUrl: "https://openrouter.ai/api/v1",
   directApiKey: "",
   defaultModel: "",
   defaultSystemPrompt: "",

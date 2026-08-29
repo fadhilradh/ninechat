@@ -19,9 +19,9 @@ function labelFor(id: string): string {
 }
 
 /**
- * 9Router fans a single request out across dozens of providers, so its model
- * list is long and prefixed (`anthropic/...`, `openai/...`). We keep the
- * prefix as a grouping key so the picker can stay navigable.
+ * A gateway that fans out across dozens of providers returns a long, prefixed
+ * model list (`anthropic/...`, `openai/...`). We keep the prefix as a grouping
+ * key so the picker stays navigable.
  */
 export default async (request: Request): Promise<Response> => {
   const upstream = resolveUpstream(request)

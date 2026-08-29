@@ -22,15 +22,15 @@ const STACK = [
   },
   {
     icon: GitBranch,
-    title: "9Router as the model layer",
-    body: "One OpenAI-compatible endpoint in front of 40+ providers, with tiered fallback when a quota runs dry.",
+    title: "Any OpenAI-compatible gateway",
+    body: "OpenRouter by default, a self-hosted 9Router if you prefer. A fallback chain retries down to free models when a quota runs dry.",
   },
 ]
 
 const FAQ = [
   {
     q: "Is it really free?",
-    a: "The app is. Completions cost whatever your gateway's providers charge -- which, if you route through 9Router's free tiers, is often nothing. Nine AI itself has no plan, quota, or paywall to hit.",
+    a: "The app is. Completions cost whatever your gateway charges, and the fallback chain ends in free models, so the floor is zero. Nine AI itself has no plan, quota, or paywall to hit.",
   },
   {
     q: "Do I have to make an account?",
@@ -41,7 +41,7 @@ const FAQ = [
     a: "In your browser's IndexedDB, on the device you typed them on. They are not uploaded, not backed up, and not readable by the deploy. Clearing site data deletes them for good.",
   },
   {
-    q: "Why can the deployed site not see my local 9Router?",
+    q: "Why can the deployed site not see a gateway on my own machine?",
     a: "A Netlify function runs in Netlify's cloud and has no route to your laptop's localhost. Switch the app to Direct mode in Settings and your browser will call the gateway itself.",
   },
   {
@@ -114,8 +114,8 @@ export function AboutPage() {
           </Link>
         </Button>
         <Button variant="ghost" asChild>
-          <a href="https://9router.com" target="_blank" rel="noreferrer noopener">
-            Learn about 9Router
+          <a href="https://openrouter.ai" target="_blank" rel="noreferrer noopener">
+            Learn about OpenRouter
           </a>
         </Button>
       </div>

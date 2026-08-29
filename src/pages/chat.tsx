@@ -28,14 +28,20 @@ export function ChatPage() {
   const models = useModels(settings, settingsReady)
   const chat = useChat({ session: sessions.active, onSessionChanged: sessions.refresh })
 
-  // Adopt the deploy's configured model the first time we run, so a fresh
-  // browser is not left staring at an empty picker.
+  // Adopt the deploy's own gateway settings the first time we run, so a fresh
+  // browser is not left staring at an empty picker -- and so flipping to
+  // Direct mode points at the same gateway the site uses, rather than a
+  // hard-coded guess the user then has to correct.
   const seededDefault = useRef(false)
   useEffect(() => {
     if (!settingsReady || seededDefault.current || settings.defaultModel) return
     seededDefault.current = true
     void fetchHealth(settings).then((health) => {
-      if (health?.defaultModel) update({ defaultModel: health.defaultModel })
+      if (!health) return
+      update({
+        ...(health.defaultModel ? { defaultModel: health.defaultModel } : {}),
+        ...(health.baseUrl ? { directBaseUrl: health.baseUrl } : {}),
+      })
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settingsReady, settings.defaultModel])

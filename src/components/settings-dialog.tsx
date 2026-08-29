@@ -44,7 +44,7 @@ const TRANSPORTS: Array<{ id: TransportMode; icon: typeof Cloud; title: string; 
     icon: Laptop,
     title: "Direct from browser",
     blurb:
-      "Your browser calls the gateway itself. The only option that works with a 9Router running on your own machine.",
+      "Your browser calls the gateway itself, using a key you paste below. The only option that works with a gateway on your own machine.",
   },
 ]
 
@@ -160,12 +160,13 @@ export function SettingsDialog({
                     <Input
                       id="base-url"
                       value={settings.directBaseUrl}
-                      placeholder="http://localhost:20128/v1"
+                      placeholder="https://openrouter.ai/api/v1"
                       onChange={(event) => onUpdate({ directBaseUrl: event.target.value })}
                     />
                     <p className="text-xs text-muted-foreground">
-                      9Router listens on port 20128 by default and speaks the OpenAI format on
-                      <code className="mx-1">/v1</code>.
+                      Any OpenAI-compatible endpoint. OpenRouter is
+                      <code className="mx-1">https://openrouter.ai/api/v1</code>; a local 9Router
+                      is <code className="mx-1">http://localhost:20128/v1</code>.
                     </p>
                   </div>
                 ) : null}
@@ -179,13 +180,13 @@ export function SettingsDialog({
                     type="password"
                     autoComplete="off"
                     value={settings.directApiKey}
-                    placeholder="Paste the key from your 9Router dashboard"
+                    placeholder="Paste a key for the gateway above"
                     onChange={(event) => onUpdate({ directApiKey: event.target.value })}
                   />
                   <p className="text-xs text-muted-foreground">
                     {settings.transport === "proxy"
                       ? "Leave blank to use the key configured on the deploy. Set one to bill your own gateway account instead."
-                      : "Kept in this browser and sent only to the base URL above."}
+                      : "Required in Direct mode. Kept in this browser and sent only to the base URL above."}
                   </p>
                 </div>
               </section>

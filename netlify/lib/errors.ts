@@ -23,8 +23,8 @@ export function explain(err: unknown, baseUrl: string): FriendlyError {
       status: 503,
       error: `Could not reach the gateway at ${baseUrl}`,
       hint: isLocal
-        ? "This function runs on Netlify, which cannot see your laptop's localhost. Either point GATEWAY_BASE_URL at a publicly reachable 9Router, or switch the app to Direct mode in Settings."
-        : "Check that 9Router is running and that GATEWAY_BASE_URL is correct.",
+        ? "This function runs on Netlify, which cannot see your laptop's localhost. Either point GATEWAY_BASE_URL at a publicly reachable gateway, or switch the app to Direct mode in Settings."
+        : "Check that the gateway is up and that GATEWAY_BASE_URL is correct.",
     }
   }
 
@@ -42,21 +42,21 @@ export function explainStatus(status: number, body: string): FriendlyError {
     return {
       status,
       error: "The gateway rejected the API key",
-      hint: "Copy the key from the 9Router dashboard into GATEWAY_API_KEY (or paste it under Settings to use your own).",
+      hint: "Set a valid key for this gateway in GATEWAY_API_KEY, or paste your own under Settings to use it instead.",
     }
   }
   if (status === 404) {
     return {
       status,
       error: "That model is not available",
-      hint: "No configured provider in 9Router serves this model. Pick a different one from the model list.",
+      hint: "The gateway has no provider that serves this model. Pick a different one from the model list.",
     }
   }
   if (status === 429) {
     return {
       status,
       error: "Every provider tier for this model is exhausted",
-      hint: "9Router already tried its fallbacks. Wait for a quota reset, or add another provider account.",
+      hint: "The gateway already walked its fallback chain. Wait for a quota reset, add another provider, or extend FALLBACK_MODELS.",
     }
   }
   if (status >= 500) {

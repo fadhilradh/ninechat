@@ -19,12 +19,12 @@ const FEATURES = [
   {
     icon: Layers,
     title: "Every model, one window",
-    body: "9Router fronts 40+ providers behind a single OpenAI-compatible endpoint. Switch between them mid-conversation without touching a config file.",
+    body: "One OpenAI-compatible endpoint in front of hundreds of models. Switch between them mid-conversation without touching a config file.",
   },
   {
     icon: Coins,
     title: "Falls back instead of failing",
-    body: "When a provider hits its quota, the gateway cascades to the next tier automatically. You see a reply, not a 429.",
+    body: "When a model hits its quota, the request cascades down a fallback chain that ends in free models. You see a reply, not a 429.",
   },
   {
     icon: ImageIcon,
@@ -52,7 +52,7 @@ const STEPS = [
   {
     step: "01",
     title: "Run or point at a gateway",
-    body: "Install 9Router locally, or aim the deploy at any OpenAI-compatible endpoint you already have.",
+    body: "Point it at OpenRouter, a self-hosted 9Router, or any OpenAI-compatible endpoint you already have.",
   },
   {
     step: "02",
@@ -74,7 +74,7 @@ export function LandingPage() {
         <div className="relative mx-auto max-w-4xl px-4 py-24 text-center">
           <Badge variant="secondary" className="mb-6 gap-1.5 px-3 py-1">
             <Zap className="h-3 w-3 text-primary" />
-            Powered by the 9Router LLM gateway
+            Runs on any OpenAI-compatible gateway
           </Badge>
 
           <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-6xl">
@@ -156,7 +156,8 @@ export function LandingPage() {
         <p className="mt-4 text-muted-foreground">
           There is no billing to build because there is nothing to bill for. Nine AI stores your
           chats in your browser and sends completions to a gateway you control. The only costs are
-          whatever your own providers charge -- and 9Router is very good at routing those to zero.
+          whatever your own gateway charges -- and the fallback chain is very good at routing
+          those to zero.
         </p>
         <Button size="lg" className="mt-8" asChild>
           <Link to="/chat">
@@ -177,12 +178,12 @@ export function LandingPage() {
               Chat
             </Link>
             <a
-              href="https://9router.com"
+              href="https://openrouter.ai"
               target="_blank"
               rel="noreferrer noopener"
               className="hover:text-foreground"
             >
-              9Router
+              OpenRouter
             </a>
           </nav>
         </div>

@@ -125,7 +125,7 @@ export async function* streamChat(request: ChatRequest): AsyncGenerator<StreamEv
     yield {
       type: "error",
       error: "Direct mode needs an API key",
-      hint: "Open Settings and paste the key from your 9Router dashboard.",
+      hint: "Direct mode sends requests from this browser, so it needs its own key. Paste one under Settings, or switch back to \"Via this site\".",
     }
     return
   }
@@ -158,7 +158,7 @@ export async function* streamChat(request: ChatRequest): AsyncGenerator<StreamEv
         ? `Could not reach ${settings.directBaseUrl}`
         : "Could not reach the ninechat API",
       hint: direct
-        ? "Is 9Router running, and does it allow this origin via CORS?"
+        ? "Is the gateway reachable from this browser, and does it allow this origin via CORS?"
         : String((err as Error)?.message ?? err),
     }
     return

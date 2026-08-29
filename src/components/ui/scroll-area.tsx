@@ -5,17 +5,19 @@ import { ScrollArea as ScrollAreaPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * LOCAL MODIFICATION: `viewportRef`.
+ *
+ * Radix owns the scrolling element, so there is no other way to reach it, and
+ * the transcript needs it to keep the view pinned to the newest token while a
+ * reply streams. Re-apply this after any `shadcn add scroll-area`.
+ */
 function ScrollArea({
   className,
   children,
   viewportRef,
   ...props
 }: React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
-  /**
-   * Radix renders the scrolling element internally, so there is no other way
-   * to reach it. The transcript needs it to keep the view pinned to the newest
-   * token while a reply streams.
-   */
   viewportRef?: React.Ref<HTMLDivElement>
 }) {
   return (

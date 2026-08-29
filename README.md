@@ -4,17 +4,18 @@
 
 Nine AI is a single-deploy fullstack app: a React frontend and a handful of Netlify
 Functions, with no separate backend to host. Conversations live in your own browser,
-completions go to a [9Router](https://9router.com) gateway, and signing in is optional
+completions go to any OpenAI-compatible gateway — [OpenRouter](https://openrouter.ai)
+by default, or a self-hosted [9Router](https://9router.com) — and signing in is optional
 everywhere.
 
 ```
 Browser (React + IndexedDB)
    |
-   |-- /api/chat ------> Netlify streaming function --> 9Router /v1 --> 40+ providers
+   |-- /api/chat ------> Netlify streaming function --> gateway /v1 --> providers
    |-- /api/models ----> Netlify function
    |-- /api/auth/* ----> Better Auth  -----------------> Postgres (optional)
    |
-   `-- Direct mode: browser --> http://localhost:20128/v1 (bypasses the functions)
+   `-- Direct mode: browser --> the gateway itself (bypasses the functions)
 ```
 
 ## Why it is shaped this way
@@ -28,8 +29,13 @@ seconds on every plan; a plain synchronous function gets 10 on the free tier. An
 that talks to an LLM has to be the former.
 
 **There are two transports.** The deployed function runs in Netlify's cloud, which cannot
-reach a 9Router on your laptop. Direct mode makes the browser call the gateway itself, so
+reach a gateway on your laptop. Direct mode makes the browser call the gateway itself, so
 local development against a local gateway works without tunnelling anything.
+
+**Fallbacks are a list, not a provider feature.** `FALLBACK_MODELS` is tried in order when
+the chosen model errors or is rate limited, and a reply is labelled with whichever model
+actually served it. Put free models last and you get 9Router-style tiered routing on a
+gateway that has none.
 
 ## Running it locally
 
@@ -58,6 +64,7 @@ Nothing else is needed.
 | `npm run format` | Prettier over the repo |
 | `npm run icons` | Regenerates the PWA icons in `public/` |
 | `npm run auth:generate` | Regenerates the Better Auth SQL schema |
+| `npm run auth:migrate` | Creates the Better Auth tables (safe to re-run) |
 
 ## Deploying to Netlify
 
@@ -71,9 +78,10 @@ Nothing else is needed.
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `GATEWAY_BASE_URL` | yes | OpenAI-compatible base URL, e.g. `https://your-9router.example.com/v1`. Must be reachable from the internet. |
-| `GATEWAY_API_KEY` | yes | Key from the 9Router dashboard. |
+| `GATEWAY_BASE_URL` | yes | OpenAI-compatible base URL, e.g. `https://openrouter.ai/api/v1`. Must be reachable from the internet. |
+| `GATEWAY_API_KEY` | yes | A key for that gateway. |
 | `DEFAULT_MODEL` | no | Model for brand-new chats. |
+| `FALLBACK_MODELS` | no | Comma-separated chain tried on error or rate limit. Free models last. |
 | `MAX_TOKENS` | no | Reply cap; keeps long answers inside the 60s streaming budget. |
 | `ALLOW_CLIENT_KEY` | no | Let visitors use their own key. Default `true`. |
 | `ALLOW_CLIENT_BASE_URL` | no | Default `false`. Turning it on makes the function an open proxy. |
@@ -88,12 +96,15 @@ Nothing else is needed.
 
 ### Turning on accounts
 
-1. Provision Postgres — **Netlify DB** (Neon) is the path of least resistance and has a
-   free tier. Copy the *pooled* connection string.
-2. Set `DATABASE_URL` and `BETTER_AUTH_SECRET`.
-3. Create the tables: `npx @better-auth/cli@latest migrate`, or paste
-   `netlify/lib/auth-schema.sql` into a SQL console.
-4. For Google, add an OAuth client with redirect URI
+1. In the Netlify UI, go to **Extensions → Neon** and enable it. It provisions a free
+   Postgres and injects `NETLIFY_DATABASE_URL` into the site environment, so no
+   connection string ever has to be copied by hand. (Any other Postgres works too —
+   set `DATABASE_URL` yourself and it takes precedence.)
+2. Set `BETTER_AUTH_SECRET` — `openssl rand -base64 32`.
+3. Create the tables: `npm run auth:migrate`. It applies `netlify/lib/auth-schema.sql`
+   in one transaction and is safe to re-run.
+4. Redeploy. `/api/auth-status` flips to `{"enabled":true}` once the database is live.
+5. For Google, add an OAuth client with redirect URI
    `https://<your-site>/api/auth/callback/google`, then set the two Google variables.
 
 Accounts are cosmetic today — they put a name in the nav. Chat history stays local and is
@@ -143,3 +154,7 @@ scripts/         generate-icons.mjs — dependency-free PNG rasteriser for the P
   message rather than a severed connection.
 - Chats do not sync between devices or browsers. That is the trade for not storing them.
 - Token usage is only shown when the upstream provider reports it; several do not.
+- The UI components come from shadcn's `radix-nova` registry. Two files carry local
+  modifications marked `LOCAL MODIFICATION` — `ui/scroll-area.tsx` (a viewport ref the
+  streaming auto-scroll needs) and `ui/sonner.tsx` (no `next-themes` dependency). Re-apply
+  them if you ever `shadcn add` those two.

@@ -24,6 +24,9 @@ interface NinechatSchema extends DBSchema {
   }
 }
 
+// Deliberately not renamed with the product. The database name is invisible to
+// users, and changing it would orphan every conversation already stored in a
+// browser rather than migrating them.
 const DB_NAME = "ninechat"
 const DB_VERSION = 1
 

@@ -14,14 +14,14 @@ const SIZES = {
 
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 48 48" role="img" aria-label="Nine AI" className={className}>
+    <svg viewBox="0 0 48 48" role="img" aria-label="Open Chat" className={className}>
       <defs>
-        <linearGradient id="nine-ai-mark" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id="open-chat-mark" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="hsl(263 85% 68%)" />
           <stop offset="100%" stopColor="hsl(291 80% 58%)" />
         </linearGradient>
       </defs>
-      <rect width="48" height="48" rx="12" fill="url(#nine-ai-mark)" />
+      <rect width="48" height="48" rx="12" fill="url(#open-chat-mark)" />
       <circle cx="14" cy="14" r="2.4" fill="white" />
       <circle cx="24" cy="14" r="3.4" fill="white" />
       <circle cx="34" cy="14" r="2.4" fill="white" />
@@ -42,7 +42,7 @@ export function Wordmark({ className, showTagline = false, size = "md" }: Wordma
       <LogoMark className={cn(sizing.mark, "shrink-0 rounded-[28%]")} />
       <span className="min-w-0">
         <span className={cn("block font-semibold leading-tight tracking-tight", sizing.text)}>
-          Nine AI
+          Open Chat
         </span>
         {showTagline ? (
           <span className="block text-[11px] leading-tight text-muted-foreground">

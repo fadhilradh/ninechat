@@ -46,17 +46,50 @@ export function ChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settingsReady, settings.defaultModel])
 
+  /**
+   * Settings persist in the browser, so a default saved before the gateway
+   * changed outlives it -- and the picker then shows a model that no longer
+   * exists, which only surfaces as a 404 when you try to send. Once the real
+   * model list is in, drop anything that is not on it.
+   */
+  const healedDefault = useRef(false)
+  useEffect(() => {
+    if (healedDefault.current || models.loading || models.models.length === 0) return
+    if (!settings.defaultModel) return
+    if (models.models.some((m) => m.id === settings.defaultModel)) {
+      healedDefault.current = true
+      return
+    }
+    healedDefault.current = true
+    void fetchHealth(settings).then((health) => {
+      const replacement = health?.defaultModel ?? models.models[0]?.id
+      if (replacement) update({ defaultModel: replacement })
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [models.loading, models.models, settings.defaultModel])
+
   // A chat with no model cannot send anything; fill it from the defaults, or
   // from whatever the gateway offered first.
   const activeId = sessions.activeId
   const activeModel = sessions.active?.model
   const patchSession = sessions.patch
   const firstModelId = models.models[0]?.id
+  const knownModels = models.models
   useEffect(() => {
-    if (!activeId || activeModel) return
+    if (!activeId) return
+
+    // Empty, or pointing at a model this gateway does not serve.
+    const stale =
+      activeModel !== undefined &&
+      activeModel !== "" &&
+      knownModels.length > 0 &&
+      !knownModels.some((m) => m.id === activeModel)
+
+    if (activeModel && !stale) return
+
     const fallback = settings.defaultModel || firstModelId
-    if (fallback) void patchSession(activeId, { model: fallback })
-  }, [activeId, activeModel, settings.defaultModel, firstModelId, patchSession])
+    if (fallback && fallback !== activeModel) void patchSession(activeId, { model: fallback })
+  }, [activeId, activeModel, settings.defaultModel, firstModelId, knownModels, patchSession])
 
   const createSession = sessions.create
   const startChat = useCallback(
@@ -139,7 +172,9 @@ export function ChatPage() {
           </div>
         )}
 
-        <div className="mx-auto w-full max-w-3xl px-4 pb-4">
+        {/* Extra bottom clearance on small screens: Netlify's badge sits in the
+            bottom-right corner and would otherwise overlap the send button. */}
+        <div className="mx-auto w-full max-w-3xl px-4 pb-10 sm:pb-6">
           <Composer
             disabled={!settingsReady}
             busy={chat.busy}

@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth"
 import { Pool } from "pg"
 
 /**
- * Signing in is optional in Nine AI, so auth is optional in the deployment
+ * Signing in is optional in Open Chat, so auth is optional in the deployment
  * too: with no DATABASE_URL the site still works end to end as a guest, and
  * only the auth routes report that they are switched off.
  */
@@ -78,7 +78,7 @@ function build() {
       cookieCache: { enabled: true, maxAge: 5 * 60 },
     },
     advanced: {
-      cookiePrefix: "nineai",
+      cookiePrefix: "openchat",
     },
   })
 }

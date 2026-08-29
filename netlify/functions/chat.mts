@@ -59,7 +59,12 @@ export default async (request: Request): Promise<Response> => {
    * is rejected outright with a 400, taking the whole request down with it.
    * Enforced here rather than trusted to FALLBACK_MODELS being set carefully.
    */
-  const chain = [model, ...settings.fallbackModels.filter((m) => m !== model)].slice(0, 3)
+  // An auto-router already picks per request, so handing it a fallback list
+  // would be arguing with it.
+  const isAutoRouter = model.startsWith("openrouter/")
+  const chain = isAutoRouter
+    ? [model]
+    : [model, ...settings.fallbackModels.filter((m) => m !== model)].slice(0, 3)
   const abort = new AbortController()
 
   // Propagate the browser hanging up (the Stop button) to the gateway, so a

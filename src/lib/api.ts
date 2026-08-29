@@ -69,7 +69,7 @@ function directHeaders(settings: AppSettings): HeadersInit {
 function proxyHeaders(settings: AppSettings): Record<string, string> {
   const headers: Record<string, string> = { "content-type": "application/json" }
   // Optional: lets a visitor use their own key against a shared deploy.
-  if (settings.directApiKey) headers["x-ninechat-key"] = settings.directApiKey
+  if (settings.directApiKey) headers["x-openchat-key"] = settings.directApiKey
   return headers
 }
 
@@ -156,7 +156,7 @@ export async function* streamChat(request: ChatRequest): AsyncGenerator<StreamEv
       type: "error",
       error: direct
         ? `Could not reach ${settings.directBaseUrl}`
-        : "Could not reach the ninechat API",
+        : "Could not reach the Open Chat API",
       hint: direct
         ? "Is the gateway reachable from this browser, and does it allow this origin via CORS?"
         : String((err as Error)?.message ?? err),

@@ -67,7 +67,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  /* Nine AI's violet, kept through the restyle. */
+  /* The brand violet, kept through the restyle. */
   --primary: oklch(0.541 0.281 293.009);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);

@@ -30,7 +30,7 @@ const STACK = [
 const FAQ = [
   {
     q: "Is it really free?",
-    a: "The app is. Completions cost whatever your gateway charges, and the fallback chain ends in free models, so the floor is zero. Nine AI itself has no plan, quota, or paywall to hit.",
+    a: "The app is. Completions cost whatever your gateway charges, and the fallback chain ends in free models, so the floor is zero. Open Chat itself has no plan, quota, or paywall to hit.",
   },
   {
     q: "Do I have to make an account?",
@@ -53,7 +53,7 @@ const FAQ = [
 export function AboutPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-16">
-      <h1 className="text-4xl font-bold tracking-tight">About Nine AI</h1>
+      <h1 className="text-4xl font-bold tracking-tight">About Open Chat</h1>
       <p className="mt-4 text-lg text-muted-foreground">
         A chat client for people who would rather own their transcript than rent it.
       </p>
@@ -64,7 +64,7 @@ export function AboutPage() {
         <h2 className="text-2xl font-semibold tracking-tight">Why it exists</h2>
         <p className="leading-relaxed text-muted-foreground">
           Every hosted chat app makes the same two decisions for you: which model you get, and who
-          keeps your conversations. Nine AI makes neither. The model is a dropdown backed by
+          keeps your conversations. Open Chat makes neither. The model is a dropdown backed by
           whatever your gateway serves, and the conversations sit in your own browser storage.
         </p>
         <p className="leading-relaxed text-muted-foreground">

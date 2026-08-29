@@ -43,7 +43,7 @@ export function SiteNav({ className }: { className?: string }) {
       )}
     >
       <nav className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
-        <Link to="/" aria-label="Nine AI home">
+        <Link to="/" aria-label="Open Chat home">
           <Wordmark size="sm" />
         </Link>
 

@@ -80,15 +80,14 @@ export function SessionList({
                       variant="ghost"
                       size="icon-sm"
                       aria-label={`Actions for ${session.title}`}
-                      className={cn(
-                        "shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100",
-                        active && "opacity-100"
-                      )}
+                      className="shrink-0 text-muted-foreground hover:text-foreground"
                     >
                       <MoreHorizontal />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
+                  {/* Nova sizes menus to the trigger by default, and this
+                      trigger is a 28px icon button. */}
+                  <DropdownMenuContent align="end" className="!w-44">
                     <DropdownMenuItem onSelect={() => setRenaming(session)}>
                       <Pencil />
                       Rename

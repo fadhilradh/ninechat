@@ -28,7 +28,12 @@ export const settings = {
    */
   baseUrl: str("GATEWAY_BASE_URL", "https://openrouter.ai/api/v1").replace(/\/+$/, ""),
   apiKey: str("GATEWAY_API_KEY"),
-  defaultModel: str("DEFAULT_MODEL", "anthropic/claude-sonnet-4-5"),
+  /**
+   * `openrouter/auto` hands model choice to the gateway, which picks per
+   * prompt. Any concrete model id works too -- the picker overrides this
+   * per chat either way.
+   */
+  defaultModel: str("DEFAULT_MODEL", "openrouter/auto"),
 
   /** Accept a per-request key from the browser, so visitors can bring their own. */
   allowClientKey: bool("ALLOW_CLIENT_KEY", true),
@@ -64,8 +69,8 @@ export interface Upstream {
 
 /** Picks the gateway for a request, honouring the browser overrides we allow. */
 export function resolveUpstream(request: Request): Upstream {
-  const clientKey = request.headers.get("x-ninechat-key")?.trim() ?? ""
-  const clientBaseUrl = request.headers.get("x-ninechat-base-url")?.trim() ?? ""
+  const clientKey = request.headers.get("x-openchat-key")?.trim() ?? ""
+  const clientBaseUrl = request.headers.get("x-openchat-base-url")?.trim() ?? ""
 
   return {
     baseUrl:

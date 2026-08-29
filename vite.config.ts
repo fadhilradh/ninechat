@@ -13,8 +13,8 @@ export default defineConfig({
       includeAssets: ["favicon.svg", "apple-touch-icon.png", "robots.txt"],
       manifest: {
         id: "/",
-        name: "Nine AI - Free Forever AI Chat",
-        short_name: "Nine AI",
+        name: "Open Chat - Free Forever AI Chat",
+        short_name: "Open Chat",
         description:
           "A fast, private chat window for every model your gateway can reach. No account required.",
         start_url: "/chat",
@@ -36,7 +36,7 @@ export default defineConfig({
         ],
         shortcuts: [
           { name: "New chat", url: "/chat", description: "Open the chat window" },
-          { name: "About", url: "/about", description: "What Nine AI is" },
+          { name: "About", url: "/about", description: "What Open Chat is" },
         ],
       },
       workbox: {

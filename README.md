@@ -1,8 +1,8 @@
-# Nine AI
+# Open Chat
 
 **Free Forever AI Chat** — a fast, private chat window for every model your gateway can reach.
 
-Nine AI is a single-deploy fullstack app: a React frontend and a handful of Netlify
+Open Chat is a single-deploy fullstack app: a React frontend and a handful of Netlify
 Functions, with no separate backend to host. Conversations live in your own browser,
 completions go to any OpenAI-compatible gateway — [OpenRouter](https://openrouter.ai)
 by default, or a self-hosted [9Router](https://9router.com) — and signing in is optional
@@ -129,7 +129,7 @@ tokens.
 
 ## Installing it as an app
 
-Nine AI is a PWA. In Chrome or Edge, use the install icon in the address bar; on iOS,
+Open Chat is a PWA. In Chrome or Edge, use the install icon in the address bar; on iOS,
 **Share → Add to Home Screen**. It opens in its own window and the shell is cached, so it
 starts instantly. When a new version deploys you get a toast offering to reload rather
 than being interrupted mid-sentence.

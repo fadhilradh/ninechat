@@ -85,7 +85,7 @@ export function LandingPage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted-foreground">
-            Nine AI is a fast, private chat window for every model your gateway can reach. No
+            Open Chat is a fast, private chat window for every model your gateway can reach. No
             account required, no message limits, no transcripts on someone else&apos;s server.
           </p>
 
@@ -154,7 +154,7 @@ export function LandingPage() {
           &ldquo;Free forever&rdquo; is a design decision
         </h2>
         <p className="mt-4 text-muted-foreground">
-          There is no billing to build because there is nothing to bill for. Nine AI stores your
+          There is no billing to build because there is nothing to bill for. Open Chat stores your
           chats in your browser and sends completions to a gateway you control. The only costs are
           whatever your own gateway charges -- and the fallback chain is very good at routing
           those to zero.

@@ -9,7 +9,7 @@ import { Toaster as Sonner, type ToasterProps } from "sonner"
 
 /**
  * The registry version of this file reads the theme from `next-themes`, which
- * is a Next.js concern. Nine AI is a Vite app pinned to dark, so the theme is
+ * is a Next.js concern. Open Chat is a Vite app pinned to dark, so the theme is
  * hard-coded rather than pulling in a provider to answer a constant.
  */
 const Toaster = ({ ...props }: ToasterProps) => {

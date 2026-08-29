@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react"
 import * as db from "@/lib/db"
 import type { AppSettings, Session } from "@/lib/types"
 
+// Kept on the old key for the same reason as the database name; see lib/db.ts.
 const LAST_SESSION_KEY = "ninechat:last-session"
 
 export interface SessionsState {

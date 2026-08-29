@@ -36,7 +36,7 @@
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.0",
     "sonner": "^1.7.4",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@better-auth/cli": "^1.2.5",

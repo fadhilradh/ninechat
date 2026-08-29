@@ -16,7 +16,7 @@ export function UpdatePrompt() {
 
   useEffect(() => {
     if (!offlineReady) return
-    toast.success("Nine AI is ready to work offline")
+    toast.success("Open Chat is ready to work offline")
     setOfflineReady(false)
   }, [offlineReady, setOfflineReady])
 

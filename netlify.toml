@@ -17,6 +17,17 @@
   port = 8888
   autoLaunch = false
 
+# An unmatched /api/* path would otherwise fall through to the SPA rule below
+# and return the app's HTML with a 200, so a client asking for a removed or
+# mistyped endpoint gets a JSON parse error instead of a 404.
+#
+# Deliberately not `force`d: a non-forced rule only fires when nothing else
+# matched, so the real function routes still win their own paths.
+[[redirects]]
+  from = "/api/*"
+  to = "/api-404.json"
+  status = 404
+
 # SPA fallback. Must stay last so it does not shadow the function routes,
 # which are declared with `config.path` inside each function.
 [[redirects]]

@@ -1,23 +1,19 @@
+// Side-effect import, and it has to come before better-auth loads.
+import "./webcrypto.js"
+
 import { betterAuth } from "better-auth"
-import { Pool } from "pg"
+
+import { databaseEnabled, pool } from "./pg.js"
 
 /**
  * Signing in is optional in Open Chat, so auth is optional in the deployment
  * too: with no DATABASE_URL the site still works end to end as a guest, and
  * only the auth routes report that they are switched off.
  */
-/**
- * NETLIFY_DATABASE_URL is injected by the Netlify Neon extension, so enabling
- * accounts on a deploy is a toggle in the UI rather than a connection string
- * copied by hand. An explicit DATABASE_URL still wins, for a database that is
- * not Netlify's.
- */
-const databaseUrl =
-  process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL || ""
 const googleClientId = process.env.GOOGLE_CLIENT_ID ?? ""
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET ?? ""
 
-export const authEnabled = databaseUrl !== ""
+export const authEnabled = databaseEnabled
 export const googleEnabled = googleClientId !== "" && googleClientSecret !== ""
 
 function trustedOrigins(): string[] {
@@ -39,25 +35,8 @@ function trustedOrigins(): string[] {
 }
 
 function build() {
-  /**
-   * One Pool per cold start. Point DATABASE_URL at a *pooled* connection string
-   * (Netlify DB and Neon both hand you one) -- serverless functions opening
-   * direct connections will exhaust the database's slots under load.
-   */
-  const isLocal = /@(localhost|127\.0\.0\.1)[:/]/.test(databaseUrl)
-
-  const pool = new Pool({
-    connectionString: databaseUrl,
-    max: 1,
-    idleTimeoutMillis: 10_000,
-    connectionTimeoutMillis: 8_000,
-    // Neon and every other hosted Postgres require TLS; a local one usually
-    // has none configured at all.
-    ssl: isLocal ? undefined : { rejectUnauthorized: true },
-  })
-
   return betterAuth({
-    database: pool,
+    database: pool(),
     baseURL: process.env.BETTER_AUTH_URL || process.env.URL || "http://localhost:8888",
     secret: process.env.BETTER_AUTH_SECRET,
     basePath: "/api/auth",

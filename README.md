@@ -2,27 +2,30 @@
 
 **Free Forever AI Chat** — a fast, private chatbot that anyone can use.
 
-No sign-up, no API key, no model to choose. Open it and type. Conversations are stored
-in your own browser, not on a server, which is what makes an open URL safe to hand out:
-there is nothing per-user to store, gate, or leak.
+No sign-up, no API key, no model to choose. Open it and type. Conversations are written
+to your own browser, which is what makes an open URL safe to hand out: a visitor with no
+account leaves nothing behind to store, gate, or leak.
 
-Open Chat is a single-deploy fullstack app — a React frontend and two Netlify Functions,
-with no separate backend to host.
+Sign in and the same chats follow you to your other devices. That is the only thing an
+account buys, and it is opt-in.
+
+Open Chat is a single-deploy fullstack app — a React frontend and a handful of Netlify
+Functions, with no separate backend to host.
 
 ```
-Browser (React + IndexedDB)
+Browser (React + IndexedDB)          <-- source of truth
    |
    |-- /api/chat ------> Netlify streaming function --> gateway --> a model
    |-- /api/auth/* ----> Better Auth  ----------------> Postgres (optional)
-   |
-   `-- conversations never leave the browser
+   `-- /api/chats ------> chat history  --------------> Postgres (signed in only)
 ```
 
 ## Why it is shaped this way
 
-**Chats are stored client-side.** The deploy holds no transcripts. That is what makes a
-public URL safe without building per-user auth, quotas, or a privacy policy you would
-have to mean.
+**Chats are stored client-side first.** A guest's transcripts never reach the deploy at
+all, which is what makes a public URL safe without building per-user quotas. Signing in
+adds a copy per chat so another device can pick it up; the browser stays the source of
+truth and the server is a mirror, not a backend.
 
 **Replies run on a streaming function.** Netlify allows a streaming response 60 seconds
 on every plan; a plain synchronous function gets 10 on the free tier. Anything that talks
@@ -61,7 +64,8 @@ will 404.
 | `npm run format` | Prettier over the repo |
 | `npm run icons` | Regenerates the PWA icons in `public/` |
 | `npm run auth:generate` | Regenerates the Better Auth SQL schema |
-| `npm run auth:migrate` | Creates the Better Auth tables (safe to re-run) |
+| `npm run auth:migrate` | Applies the schema to a database you hold the URL to (safe to re-run) |
+| `npm run auth:schema` | Regenerates `auth-schema.sql` from the installed `better-auth` |
 
 ## Deploying to Netlify
 
@@ -80,7 +84,7 @@ will 404.
 | `DEFAULT_MODEL` | no | `openrouter/auto` routes per prompt; a concrete id pins one model. |
 | `FALLBACK_MODELS` | no | Comma-separated chain tried on error or rate limit. Free models last. |
 | `MAX_TOKENS` | no | Reply cap; keeps long answers inside the 60s streaming budget. |
-| `DATABASE_URL` | no | Pooled Postgres URL. Blank disables accounts; everything else keeps working. |
+| `DATABASE_URL` | no | Pooled Postgres URL. Enables accounts and cross-device chat history. Blank disables both; everything else keeps working. |
 | `BETTER_AUTH_SECRET` | with auth | `openssl rand -base64 32` |
 | `BETTER_AUTH_URL` | no | Netlify's `URL` is used when unset. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | no | Enables the Google button. |
@@ -93,19 +97,23 @@ will 404.
 
 ### Turning on accounts
 
-1. In the Netlify UI, go to **Extensions → Neon** and enable it. It provisions a free
-   Postgres and injects `NETLIFY_DATABASE_URL` into the site environment, so no
-   connection string ever has to be copied by hand. (Any other Postgres works too —
-   set `DATABASE_URL` yourself and it takes precedence.)
+1. Create a free Postgres anywhere — [Neon](https://neon.tech) works well — and set its
+   **pooled** connection string as `DATABASE_URL` in the Netlify site environment.
 2. Set `BETTER_AUTH_SECRET` — `openssl rand -base64 32`.
-3. Create the tables: `npm run auth:migrate`. It applies `netlify/lib/auth-schema.sql`
-   in one transaction and is safe to re-run.
-4. Redeploy. `/api/auth-status` flips to `{"enabled":true}` once the database is live.
-5. For Google, add an OAuth client with redirect URI
+3. Redeploy. `/api/auth-status` flips to `{"enabled":true}`.
+4. For Google, add an OAuth client with redirect URI
    `https://<your-site>/api/auth/callback/google`, then set the two Google variables.
 
-Accounts are cosmetic today — they put a name in the nav. Chat history stays local and is
-not synced to an account.
+There is no migration step. Netlify treats `DATABASE_URL` as a *secret*, meaning the CLI
+can only ever read back a masked value — so nothing outside the deploy can reach the
+database to migrate it. The functions create their own tables on first use instead:
+`netlify/lib/auth-schema.sql` is idempotent, applied under an advisory lock, and skipped
+on later cold starts via a fingerprint row. `npm run auth:migrate` still exists for a
+local database you hold the URL to.
+
+After upgrading `better-auth`, run `npm run auth:schema` to regenerate the auth tables
+from the installed version. It emits `ADD COLUMN IF NOT EXISTS` alongside each table, so
+a database created by an older release catches up rather than failing at runtime.
 
 ## Using it
 
@@ -140,7 +148,7 @@ netlify/
 src/
   components/    UI, with shadcn primitives under components/ui
   hooks/         use-chat (the streaming engine), use-sessions, use-settings
-  lib/           api, db (IndexedDB), image (resizing), auth-client
+  lib/           api, db (IndexedDB), sync, image (resizing), auth-client
   pages/         landing, about, auth, chat
 scripts/         generate-icons.mjs — dependency-free PNG rasteriser for the PWA icons
 ```
@@ -149,7 +157,13 @@ scripts/         generate-icons.mjs — dependency-free PNG rasteriser for the P
 
 - A single reply must finish within 60 seconds. Very long outputs get a clear timeout
   message rather than a severed connection.
-- Chats do not sync between devices or browsers. That is the trade for not storing them.
+- Without an account, chats do not leave the browser they were typed in. That is the
+  trade for not storing them.
+- Attached images never sync. They are the bulk of a conversation by far, and this is a
+  free deploy anyone can sign up to — so the metadata travels and the bytes stay put. A
+  chat opened on another device shows that an image was there, not the image.
+- Sync is last-write-wins per chat, not a merge. Editing the same chat on two devices
+  between syncs loses the older side.
 - Token usage is only shown when the upstream provider reports it; several do not.
 - There is no model picker. Which model answered is reported per reply, but it is not
   yours to choose — that is deliberate, not missing.

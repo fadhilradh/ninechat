@@ -6,11 +6,14 @@ import { Composer } from "@/components/composer"
 import { EmptyState } from "@/components/empty-state"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { Sidebar } from "@/components/sidebar"
+import { SyncStatus } from "@/components/sync-status"
 import { Transcript } from "@/components/transcript"
 import { Button } from "@/components/ui/button"
 import { useChat } from "@/hooks/use-chat"
 import { useSessions } from "@/hooks/use-sessions"
 import { useSettings } from "@/hooks/use-settings"
+import { useSync } from "@/hooks/use-sync"
+import { useSession } from "@/lib/auth-client"
 import type { Attachment } from "@/lib/types"
 
 export function ChatPage() {
@@ -24,6 +27,9 @@ export function ChatPage() {
   const [pendingSend, setPendingSend] = useState<string | null>(null)
 
   const chat = useChat({ session: sessions.active, onSessionChanged: sessions.refresh })
+
+  const { data: account } = useSession()
+  const sync = useSync(sessions.refresh)
 
   const createSession = sessions.create
   const startChat = useCallback(
@@ -63,14 +69,17 @@ export function ChatPage() {
         }}
         onTogglePin={(id) => void sessions.togglePin(id)}
         footer={
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-muted-foreground"
-            onClick={() => setSettingsOpen(true)}
-          >
-            Settings and gateway
-          </Button>
+          <div className="space-y-2">
+            <SyncStatus sync={sync} signedIn={Boolean(account?.user)} />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-muted-foreground"
+              onClick={() => setSettingsOpen(true)}
+            >
+              Settings
+            </Button>
+          </div>
         }
       />
 

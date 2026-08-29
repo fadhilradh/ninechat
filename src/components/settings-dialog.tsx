@@ -55,7 +55,7 @@ export function SettingsDialog({
           <DialogHeader className="p-6 pb-4">
             <DialogTitle>Settings</DialogTitle>
             <DialogDescription>
-              Stored in this browser only. There is nothing to configure to start chatting.
+              Stored in this browser. There is nothing to configure to start chatting.
             </DialogDescription>
           </DialogHeader>
 
@@ -155,7 +155,7 @@ export function SettingsDialog({
               <section className="space-y-2">
                 <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
                 <p className="text-xs text-muted-foreground">
-                  Conversations live in this browser&apos;s storage. Clearing them is permanent and
+                  Conversations live in this browser&apos;s storage, and in your account if you are signed in. Clearing them is permanent and
                   cannot be undone from another device.
                 </p>
                 <Button variant="destructive" size="sm" onClick={() => setConfirmWipe(true)}>
@@ -170,7 +170,7 @@ export function SettingsDialog({
       <ConfirmDialog
         open={confirmWipe}
         title="Delete every chat?"
-        description="All conversations and attached images will be removed from this browser."
+        description="Every conversation and attached image will be deleted from this browser, and from your account if you are signed in."
         confirmLabel="Delete everything"
         onOpenChange={setConfirmWipe}
         onConfirm={() => {

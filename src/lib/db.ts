@@ -3,9 +3,14 @@ import { openDB, type DBSchema, type IDBPDatabase } from "idb"
 import { DEFAULT_SETTINGS, type AppSettings, type Message, type Session } from "./types"
 
 /**
- * Everything the user types lives in their own browser. That is a deliberate
- * choice for a site anyone can hit on a public URL: no shared database, no
- * per-user auth to get wrong, and no transcripts sitting on a server.
+ * Everything the user types lives in their own browser first. That is a
+ * deliberate choice for a site anyone can hit on a public URL: guests need no
+ * account, and nothing they type touches a server beyond the model call.
+ *
+ * Signing in adds a copy on the server so a chat can follow you to another
+ * device -- see lib/sync.ts. This module stays the source of truth either way;
+ * it just announces its writes so the sync loop knows there is something to
+ * send.
  */
 interface NinechatSchema extends DBSchema {
   sessions: {
@@ -51,6 +56,68 @@ export function newId(): string {
   return crypto.randomUUID()
 }
 
+// --- change notification ---------------------------------------------------
+
+export const LOCAL_CHANGE_EVENT = "openchat:local-change"
+
+let muted = 0
+
+/**
+ * Pulling from the server writes through these same functions, and a push
+ * fired by a pull is a loop. Sync wraps its writes in this.
+ */
+export async function withoutNotifying<T>(work: () => Promise<T>): Promise<T> {
+  muted += 1
+  try {
+    return await work()
+  } finally {
+    muted -= 1
+  }
+}
+
+function notifyChanged(sessionId?: string): void {
+  if (muted > 0 || typeof window === "undefined") return
+  window.dispatchEvent(new CustomEvent(LOCAL_CHANGE_EVENT, { detail: { sessionId } }))
+}
+
+// --- delete queue ----------------------------------------------------------
+
+/**
+ * A chat deleted here has to be deleted on your other devices too, and the
+ * only way they find out is a tombstone on the server. Recording the id at the
+ * point of deletion -- rather than at the call site -- means every path that
+ * removes a chat is covered, including "clear everything".
+ *
+ * Harmless while signed out: sync drains the queue against ids the server
+ * never had, which does nothing.
+ */
+const DELETE_QUEUE_KEY = "openchat:pending-deletes"
+const DELETE_QUEUE_MAX = 200
+
+export function pendingDeletes(): string[] {
+  try {
+    const raw = localStorage.getItem(DELETE_QUEUE_KEY)
+    return raw ? (JSON.parse(raw) as string[]) : []
+  } catch {
+    return []
+  }
+}
+
+function queueDeletes(ids: string[]): void {
+  if (ids.length === 0 || typeof localStorage === "undefined") return
+  const merged = [...new Set([...pendingDeletes(), ...ids])].slice(-DELETE_QUEUE_MAX)
+  localStorage.setItem(DELETE_QUEUE_KEY, JSON.stringify(merged))
+}
+
+export function forgetPendingDeletes(ids: string[]): void {
+  if (ids.length === 0 || typeof localStorage === "undefined") return
+  const done = new Set(ids)
+  localStorage.setItem(
+    DELETE_QUEUE_KEY,
+    JSON.stringify(pendingDeletes().filter((id) => !done.has(id)))
+  )
+}
+
 // --- sessions --------------------------------------------------------------
 
 export async function listSessions(): Promise<Session[]> {
@@ -67,6 +134,7 @@ export async function getSession(id: string): Promise<Session | undefined> {
 
 export async function putSession(session: Session): Promise<void> {
   await (await db()).put("sessions", session)
+  notifyChanged(session.id)
 }
 
 export async function createSession(init: Partial<Session> = {}): Promise<Session> {
@@ -95,6 +163,8 @@ export async function deleteSession(id: string): Promise<void> {
     ...messageIds.map((key) => tx.objectStore("messages").delete(key)),
     tx.done,
   ])
+  if (muted === 0) queueDeletes([id])
+  notifyChanged(id)
 }
 
 export async function renameSession(id: string, title: string): Promise<Session | undefined> {
@@ -127,12 +197,14 @@ export async function listMessages(sessionId: string): Promise<Message[]> {
 
 export async function putMessage(message: Message): Promise<void> {
   await (await db()).put("messages", message)
+  notifyChanged(message.sessionId)
 }
 
 export async function deleteMessages(ids: string[]): Promise<void> {
   const database = await db()
   const tx = database.transaction("messages", "readwrite")
   await Promise.all([...ids.map((id) => tx.store.delete(id)), tx.done])
+  notifyChanged()
 }
 
 /** Duplicates a chat, including its history. Handy before trying a risky prompt. */
@@ -176,6 +248,26 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
 /** Wipes every conversation. The Settings dialog confirms before calling this. */
 export async function clearEverything(): Promise<void> {
   const database = await db()
+  queueDeletes((await database.getAllKeys("sessions")) as string[])
   const tx = database.transaction(["sessions", "messages"], "readwrite")
   await Promise.all([tx.objectStore("sessions").clear(), tx.objectStore("messages").clear(), tx.done])
+  notifyChanged()
+}
+
+/**
+ * Swaps a chat's messages for the server's copy. Used by sync only -- the
+ * message ids are stable, so this is a replace rather than a merge.
+ */
+export async function replaceSessionMessages(
+  sessionId: string,
+  messages: Message[]
+): Promise<void> {
+  const database = await db()
+  const stale = await database.getAllKeysFromIndex("messages", "bySession", sessionId)
+  const tx = database.transaction("messages", "readwrite")
+  await Promise.all([
+    ...stale.map((key) => tx.store.delete(key)),
+    ...messages.map((message) => tx.store.put(message)),
+    tx.done,
+  ])
 }

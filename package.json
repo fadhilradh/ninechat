@@ -15,7 +15,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,css,md,json}\"",
     "auth:generate": "better-auth generate --config netlify/lib/auth.ts --output netlify/lib/auth-schema.sql",
     "icons": "node scripts/generate-icons.mjs",
-    "auth:migrate": "node scripts/migrate-auth.mjs"
+    "auth:migrate": "node scripts/migrate-auth.mjs",
+    "auth:schema": "node scripts/generate-auth-schema.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",

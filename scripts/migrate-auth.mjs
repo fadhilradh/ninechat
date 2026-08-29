@@ -1,7 +1,12 @@
 /**
- * Creates the Better Auth tables.
+ * Creates the Better Auth tables and the chat-history tables that hang off them.
  *
  *   npm run auth:migrate
+ *
+ * Only needed for a database you hold the URL to -- typically a local one. The
+ * deployed site applies the same file itself on the first request after a cold
+ * start, because Netlify keeps DATABASE_URL as a secret that nothing outside
+ * the deploy can read.
  *
  * Reads DATABASE_URL, or NETLIFY_DATABASE_URL if the Netlify Neon extension
  * set it, from the environment or from .env. Applies netlify/lib/auth-schema.sql,
@@ -34,9 +39,11 @@ const url =
 if (!url) {
   console.error("No DATABASE_URL or NETLIFY_DATABASE_URL found.")
   console.error()
-  console.error("On Netlify: enable the Neon extension, then pull the value down with")
-  console.error("  npx netlify env:list")
-  console.error("Locally: put DATABASE_URL in .env")
+  console.error("Put DATABASE_URL in .env, or export it, and run this again.")
+  console.error()
+  console.error("For the deployed database there is nothing to do: Netlify holds the")
+  console.error("connection string as a secret the CLI can only read back masked, so the")
+  console.error("functions apply this same schema themselves on first use.")
   process.exit(1)
 }
 
@@ -49,8 +56,10 @@ const client = new pg.Client({
   ssl: isLocal ? undefined : { rejectUnauthorized: true },
 })
 
-const redacted = url.replace(/\/\/[^@]*@/, "//***@")
-console.log(`Connecting to ${redacted}`)
+// Host included would identify the project, and this output tends to end up
+// pasted into issues. The database name is enough to know you hit the right one.
+const database = url.split("/").pop()?.split("?")[0] ?? "?"
+console.log(`Connecting to database "${database}"`)
 
 try {
   await client.connect()
@@ -62,7 +71,8 @@ try {
 
   const { rows } = await client.query(
     `SELECT table_name FROM information_schema.tables
-     WHERE table_schema = 'public' AND table_name IN ('user','session','account','verification')
+     WHERE table_schema = 'public'
+       AND table_name IN ('user','session','account','verification','chat_session','chat_message')
      ORDER BY table_name`
   )
   console.log(`\nTables present: ${rows.map((r) => r.table_name).join(", ") || "none"}`)

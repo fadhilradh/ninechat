@@ -4,10 +4,17 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # NODE_VERSION alone sets the *build* image; the functions run on whatever
+  # Lambda runtime Netlify defaults to unless this says otherwise. Older ones
+  # have no global `crypto`, which Better Auth needs.
+  AWS_LAMBDA_JS_RUNTIME = "nodejs20.x"
 
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  # esbuild only follows imports, and the schema is read at runtime rather than
+  # imported. Without this the deploy cannot create its own tables.
+  included_files = ["netlify/lib/*.sql"]
 
 # `netlify dev` runs Vite and the functions together on one origin, so the
 # frontend can call /api/* in development exactly as it does in production.

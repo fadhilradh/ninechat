@@ -54,8 +54,12 @@ export default async (request: Request): Promise<Response> => {
    * this list on a 429 or a provider error and serves from the first one that
    * answers, so a rate-limited primary degrades to a free model instead of
    * failing the request.
+   *
+   * Capped at three because that is OpenRouter's hard limit -- a longer list
+   * is rejected outright with a 400, taking the whole request down with it.
+   * Enforced here rather than trusted to FALLBACK_MODELS being set carefully.
    */
-  const chain = [model, ...settings.fallbackModels.filter((m) => m !== model)]
+  const chain = [model, ...settings.fallbackModels.filter((m) => m !== model)].slice(0, 3)
   const abort = new AbortController()
 
   // Propagate the browser hanging up (the Stop button) to the gateway, so a

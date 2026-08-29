@@ -56,7 +56,6 @@ export function useSessions(): SessionsState {
   const create = useCallback(
     async (settings: AppSettings) => {
       const session = await db.createSession({
-        model: settings.defaultModel,
         systemPrompt: settings.defaultSystemPrompt,
         temperature: settings.defaultTemperature,
       })

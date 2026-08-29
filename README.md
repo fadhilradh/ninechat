@@ -1,41 +1,41 @@
 # Open Chat
 
-**Free Forever AI Chat** — a fast, private chat window for every model your gateway can reach.
+**Free Forever AI Chat** — a fast, private chatbot that anyone can use.
 
-Open Chat is a single-deploy fullstack app: a React frontend and a handful of Netlify
-Functions, with no separate backend to host. Conversations live in your own browser,
-completions go to any OpenAI-compatible gateway — [OpenRouter](https://openrouter.ai)
-by default, or a self-hosted [9Router](https://9router.com) — and signing in is optional
-everywhere.
+No sign-up, no API key, no model to choose. Open it and type. Conversations are stored
+in your own browser, not on a server, which is what makes an open URL safe to hand out:
+there is nothing per-user to store, gate, or leak.
+
+Open Chat is a single-deploy fullstack app — a React frontend and two Netlify Functions,
+with no separate backend to host.
 
 ```
 Browser (React + IndexedDB)
    |
-   |-- /api/chat ------> Netlify streaming function --> gateway /v1 --> providers
-   |-- /api/models ----> Netlify function
-   |-- /api/auth/* ----> Better Auth  -----------------> Postgres (optional)
+   |-- /api/chat ------> Netlify streaming function --> gateway --> a model
+   |-- /api/auth/* ----> Better Auth  ----------------> Postgres (optional)
    |
-   `-- Direct mode: browser --> the gateway itself (bypasses the functions)
+   `-- conversations never leave the browser
 ```
 
 ## Why it is shaped this way
 
 **Chats are stored client-side.** The deploy holds no transcripts. That is what makes a
-public URL safe to hand out without building per-user auth, quotas, or a privacy policy
-you would have to mean.
+public URL safe without building per-user auth, quotas, or a privacy policy you would
+have to mean.
 
-**Completions run on a streaming function.** Netlify allows a streaming response 60
-seconds on every plan; a plain synchronous function gets 10 on the free tier. Anything
-that talks to an LLM has to be the former.
+**Replies run on a streaming function.** Netlify allows a streaming response 60 seconds
+on every plan; a plain synchronous function gets 10 on the free tier. Anything that talks
+to an LLM has to be the former.
 
-**There are two transports.** The deployed function runs in Netlify's cloud, which cannot
-reach a gateway on your laptop. Direct mode makes the browser call the gateway itself, so
-local development against a local gateway works without tunnelling anything.
+**Visitors configure nothing.** There is no model picker and no place to paste a key. The
+server holds one credential and lets the gateway route each request, so there is no
+surface for a visitor to misconfigure and no support burden when they do.
 
-**Fallbacks are a list, not a provider feature.** `FALLBACK_MODELS` is tried in order when
-the chosen model errors or is rate limited, and a reply is labelled with whichever model
-actually served it. Put free models last and you get 9Router-style tiered routing on a
-gateway that has none.
+**Errors are written for visitors.** "Set GATEWAY_API_KEY" is useless advice to someone
+who just wants an answer, and it leaks how the thing is wired. Operator detail goes to
+the function logs; the chat window gets a plain sentence and some idea of whether to
+retry.
 
 ## Running it locally
 
@@ -50,9 +50,6 @@ npm run dev               # netlify dev on http://localhost:8888
 `netlify dev` serves Vite and the functions on one origin, so `/api/*` behaves exactly as
 it does in production. `npm run dev:vite` runs the frontend alone, but the `/api` routes
 will 404.
-
-If your 9Router is local, open **Settings → Direct from browser** and paste its API key.
-Nothing else is needed.
 
 ### Other scripts
 
@@ -78,21 +75,21 @@ Nothing else is needed.
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `GATEWAY_BASE_URL` | yes | OpenAI-compatible base URL, e.g. `https://openrouter.ai/api/v1`. Must be reachable from the internet. |
-| `GATEWAY_API_KEY` | yes | A key for that gateway. |
-| `DEFAULT_MODEL` | no | Model for brand-new chats. |
+| `GATEWAY_BASE_URL` | yes | OpenAI-compatible base URL, e.g. `https://openrouter.ai/api/v1`. |
+| `GATEWAY_API_KEY` | yes | A key for that gateway. **Put a spend limit on it** — see below. |
+| `DEFAULT_MODEL` | no | `openrouter/auto` routes per prompt; a concrete id pins one model. |
 | `FALLBACK_MODELS` | no | Comma-separated chain tried on error or rate limit. Free models last. |
 | `MAX_TOKENS` | no | Reply cap; keeps long answers inside the 60s streaming budget. |
-| `ALLOW_CLIENT_KEY` | no | Let visitors use their own key. Default `true`. |
-| `ALLOW_CLIENT_BASE_URL` | no | Default `false`. Turning it on makes the function an open proxy. |
 | `DATABASE_URL` | no | Pooled Postgres URL. Blank disables accounts; everything else keeps working. |
 | `BETTER_AUTH_SECRET` | with auth | `openssl rand -base64 32` |
 | `BETTER_AUTH_URL` | no | Netlify's `URL` is used when unset. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | no | Enables the Google button. |
 
-> Hosting a gateway on the public internet exposes your provider credentials to whoever
-> can reach it. Put it behind a key you rotate, or skip the proxy entirely and let each
-> visitor bring their own in Direct mode.
+> **One key pays for everyone.** Chat has no sign-in gate, by design — that is the
+> product. So every visitor spends the credit on `GATEWAY_API_KEY`. Set a hard spend
+> limit on that key with your provider before the URL goes anywhere public; it turns the
+> worst case into a capped number instead of an open tab. Ending `FALLBACK_MODELS` in
+> free models helps too.
 
 ### Turning on accounts
 
@@ -138,12 +135,12 @@ than being interrupted mid-sentence.
 
 ```
 netlify/
-  functions/     chat.mts (streaming), models.mts, health.mts, auth.mts, auth-status.mts
+  functions/     chat.mts (streaming), health.mts, auth.mts, auth-status.mts
   lib/           settings, error mapping, SSE helpers, Better Auth setup + SQL
 src/
   components/    UI, with shadcn primitives under components/ui
-  hooks/         use-chat (the streaming engine), use-sessions, use-models, use-settings
-  lib/           api (both transports), db (IndexedDB), image (resizing), auth-client
+  hooks/         use-chat (the streaming engine), use-sessions, use-settings
+  lib/           api, db (IndexedDB), image (resizing), auth-client
   pages/         landing, about, auth, chat
 scripts/         generate-icons.mjs — dependency-free PNG rasteriser for the PWA icons
 ```
@@ -154,6 +151,8 @@ scripts/         generate-icons.mjs — dependency-free PNG rasteriser for the P
   message rather than a severed connection.
 - Chats do not sync between devices or browsers. That is the trade for not storing them.
 - Token usage is only shown when the upstream provider reports it; several do not.
+- There is no model picker. Which model answered is reported per reply, but it is not
+  yours to choose — that is deliberate, not missing.
 - The UI components come from shadcn's `radix-nova` registry. Two files carry local
   modifications marked `LOCAL MODIFICATION` — `ui/scroll-area.tsx` (a viewport ref the
   streaming auto-scroll needs) and `ui/sonner.tsx` (no `next-themes` dependency). Re-apply

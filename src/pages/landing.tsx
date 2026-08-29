@@ -17,19 +17,24 @@ import { Wordmark } from "@/components/wordmark"
 
 const FEATURES = [
   {
+    icon: Zap,
+    title: "No sign-up, no setup",
+    body: "Open it and type. No account, no API key, no configuration screen to get through first.",
+  },
+  {
     icon: Layers,
-    title: "Every model, one window",
-    body: "One OpenAI-compatible endpoint in front of hundreds of models. Switch between them mid-conversation without touching a config file.",
+    title: "The model is chosen for you",
+    body: "Every message is routed to a model that suits it. Nothing to pick, nothing to keep up with as new ones appear.",
   },
   {
     icon: Coins,
-    title: "Falls back instead of failing",
-    body: "When a model hits its quota, the request cascades down a fallback chain that ends in free models. You see a reply, not a 429.",
+    title: "No message limits",
+    body: "No daily cap, no trial counter, no upgrade prompt at the bottom of the screen.",
   },
   {
     icon: ImageIcon,
     title: "Screenshots welcome",
-    body: "Paste or drop an image straight into the composer. It is resized in your browser before it ever leaves the tab.",
+    body: "Paste or drop an image straight into the composer. It is resized in your browser before it is sent.",
   },
   {
     icon: Repeat,
@@ -46,23 +51,28 @@ const FEATURES = [
     title: "Installs like an app",
     body: "Add it to your dock or home screen. It opens in its own window and loads instantly, even on a bad connection.",
   },
+  {
+    icon: ShieldCheck,
+    title: "Nothing to lose track of",
+    body: "No billing, no seats, no keys to rotate. There is nothing here that can quietly start costing you money.",
+  },
 ]
 
 const STEPS = [
   {
     step: "01",
-    title: "Run or point at a gateway",
-    body: "Point it at OpenRouter, a self-hosted 9Router, or any OpenAI-compatible endpoint you already have.",
+    title: "Open it",
+    body: "No account, no install, no configuration. The chat is the landing pad.",
   },
   {
     step: "02",
-    title: "Pick a model",
-    body: "The picker lists whatever your gateway actually serves, grouped by provider and searchable.",
+    title: "Start typing",
+    body: "Ask anything. Attach a screenshot if it helps explain the question.",
   },
   {
     step: "03",
-    title: "Start typing",
-    body: "No sign-up wall, no trial counter, no credit card. Make an account later if you want one.",
+    title: "Come back whenever",
+    body: "Your conversations are waiting in this browser. Make an account later only if you want one.",
   },
 ]
 
@@ -74,7 +84,7 @@ export function LandingPage() {
         <div className="relative mx-auto max-w-4xl px-4 py-24 text-center">
           <Badge variant="secondary" className="mb-6 gap-1.5 px-3 py-1">
             <Zap className="h-3 w-3 text-primary" />
-            Runs on any OpenAI-compatible gateway
+            No account. No limits. No catch.
           </Badge>
 
           <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-6xl">
@@ -85,8 +95,8 @@ export function LandingPage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted-foreground">
-            Open Chat is a fast, private chat window for every model your gateway can reach. No
-            account required, no message limits, no transcripts on someone else&apos;s server.
+            A fast, private chatbot that anyone can use. Nothing to sign up for, nothing to
+            configure, and no transcripts on someone else&apos;s server.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -109,9 +119,12 @@ export function LandingPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-20">
         <header className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-semibold tracking-tight">Built for people who switch models</h2>
+          <h2 className="text-3xl font-semibold tracking-tight">
+            Everything you need, nothing you don&apos;t
+          </h2>
           <p className="mt-3 text-muted-foreground">
-            Most chat UIs marry you to one provider. This one treats the model as a dropdown.
+            Most chat apps want an account before they will answer a single question. This one just
+            answers.
           </p>
         </header>
 
@@ -134,7 +147,7 @@ export function LandingPage() {
       <section className="border-y bg-card/40">
         <div className="mx-auto max-w-5xl px-4 py-20">
           <h2 className="text-center text-3xl font-semibold tracking-tight">
-            Three steps, then you are chatting
+            There is no step two
           </h2>
           <ol className="mt-12 grid gap-8 sm:grid-cols-3">
             {STEPS.map(({ step, title, body }) => (
@@ -154,10 +167,9 @@ export function LandingPage() {
           &ldquo;Free forever&rdquo; is a design decision
         </h2>
         <p className="mt-4 text-muted-foreground">
-          There is no billing to build because there is nothing to bill for. Open Chat stores your
-          chats in your browser and sends completions to a gateway you control. The only costs are
-          whatever your own gateway charges -- and the fallback chain is very good at routing
-          those to zero.
+          There is no billing to build because there is nothing to bill for. Open Chat keeps your
+          conversations in your own browser, so there are no accounts to store, no transcripts to
+          host, and no per-seat cost to recover. It is a chatbot, not a funnel.
         </p>
         <Button size="lg" className="mt-8" asChild>
           <Link to="/chat">
@@ -177,14 +189,9 @@ export function LandingPage() {
             <Link to="/chat" className="hover:text-foreground">
               Chat
             </Link>
-            <a
-              href="https://openrouter.ai"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="hover:text-foreground"
-            >
-              OpenRouter
-            </a>
+            <Link to="/auth?mode=signup" className="hover:text-foreground">
+              Sign up
+            </Link>
           </nav>
         </div>
       </footer>

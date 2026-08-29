@@ -71,7 +71,6 @@ export function useChat({ session, onSessionChanged }: Options): ChatState {
         content: "",
         attachments: [],
         createdAt: Date.now(),
-        model: current.model,
       }
 
       setMessages([...history, assistant])
@@ -87,17 +86,17 @@ export function useChat({ session, onSessionChanged }: Options): ChatState {
 
       try {
         for await (const event of streamChat({
-          model: current.model,
           temperature: current.temperature,
           systemPrompt: current.systemPrompt,
           messages: history,
-          settings,
           signal: controller.signal,
         })) {
           switch (event.type) {
             case "meta":
-              // Arrives again mid-stream when a fallback model took over, so
-              // this has to reach state rather than just the local object.
+              // The gateway routes each request, so the model is reported to
+              // us rather than chosen by us -- and it can change mid-stream if
+              // a fallback takes over. This has to reach state, not just the
+              // local object.
               assistant.model = event.model
               setMessages((prev) =>
                 prev.map((m) => (m.id === assistant.id ? { ...m, model: event.model } : m))
@@ -155,7 +154,7 @@ export function useChat({ session, onSessionChanged }: Options): ChatState {
       if (settings.autoTitle && !current.titleLocked && !failure) {
         const transcript = [...history, finished]
         if (transcript.filter((m) => m.role !== "system").length >= 2) {
-          const title = await suggestTitle(settings, current.model, transcript)
+          const title = await suggestTitle(settings, transcript)
           if (title) {
             const latest = await db.getSession(current.id)
             if (latest && !latest.titleLocked) {

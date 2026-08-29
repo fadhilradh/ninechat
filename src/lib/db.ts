@@ -75,7 +75,6 @@ export async function createSession(init: Partial<Session> = {}): Promise<Sessio
     id: newId(),
     title: "New chat",
     titleLocked: false,
-    model: "",
     systemPrompt: "",
     temperature: 0.7,
     pinned: false,

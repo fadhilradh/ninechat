@@ -1,46 +1,34 @@
 import type { Config } from "@netlify/functions"
 
-import { json, resolveUpstream, settings } from "../lib/settings.js"
+import { json, settings } from "../lib/settings.js"
 
 /**
- * Answers the only two questions worth asking on startup: is a key configured,
- * and can we actually reach the gateway from here?
+ * Answers the only question a visitor's browser needs: can we serve a reply
+ * right now? Deliberately reports nothing about how -- no base URL, no model,
+ * no key state. That is the operator's business, and this endpoint is public.
  */
-export default async (request: Request): Promise<Response> => {
-  const upstream = resolveUpstream(request)
+export default async (): Promise<Response> => {
   const startedAt = Date.now()
 
-  if (!upstream.apiKey) {
-    return json({
-      ok: false,
-      reachable: false,
-      reason: "no-key",
-      baseUrl: upstream.baseUrl,
-      defaultModel: settings.defaultModel,
-      acceptsClientKey: settings.allowClientKey,
-    })
+  if (!settings.apiKey) {
+    return json({ ok: false, reachable: false, reason: "unconfigured" })
   }
 
   let reachable = false
-  let reason: string | null = null
   try {
-    const probe = await fetch(`${upstream.baseUrl}/models`, {
-      headers: { authorization: `Bearer ${upstream.apiKey}` },
+    const probe = await fetch(`${settings.baseUrl}/models`, {
+      headers: { authorization: `Bearer ${settings.apiKey}` },
       signal: AbortSignal.timeout(5000),
     })
     reachable = probe.ok
-    if (!probe.ok) reason = `gateway-${probe.status}`
   } catch {
-    reason = "unreachable"
+    reachable = false
   }
 
   return json({
     ok: reachable,
     reachable,
-    reason,
-    baseUrl: upstream.baseUrl,
-    defaultModel: settings.defaultModel,
-    acceptsClientKey: settings.allowClientKey,
+    reason: reachable ? null : "upstream",
     latencyMs: Date.now() - startedAt,
   })
 }

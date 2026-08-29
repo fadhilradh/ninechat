@@ -1,6 +1,6 @@
 import type { Config } from "@netlify/functions"
 
-import { json, resolveUpstream, settings } from "../lib/settings.js"
+import { json, settings } from "../lib/settings.js"
 import { explain, explainStatus } from "../lib/errors.js"
 import { encodeEvent, readOpenAiStream, sseHeaders } from "../lib/sse.js"
 
@@ -12,7 +12,6 @@ import { encodeEvent, readOpenAiStream, sseHeaders } from "../lib/sse.js"
 const STREAM_BUDGET_MS = 55_000
 
 interface ChatRequest {
-  model?: string
   temperature?: number
   messages: Array<{
     role: "system" | "user" | "assistant"
@@ -36,18 +35,19 @@ export default async (request: Request): Promise<Response> => {
     return json({ error: "messages must be a non-empty array" }, 400)
   }
 
-  const upstream = resolveUpstream(request)
-  if (!upstream.apiKey) {
+  if (!settings.apiKey) {
     return json(
       {
-        error: "No gateway API key configured",
-        hint: "Set GATEWAY_API_KEY in the Netlify site environment, or paste your own key under Settings.",
+        error: "The chat service is not configured yet",
+        hint: "GATEWAY_API_KEY is missing from the site environment.",
       },
-      401
+      503
     )
   }
 
-  const model = payload.model?.trim() || settings.defaultModel
+  // Visitors do not choose a model. The server picks one, and by default that
+  // is an auto-router which picks per prompt.
+  const model = settings.defaultModel
 
   /**
    * The chosen model first, then the configured fallbacks. OpenRouter walks
@@ -74,12 +74,12 @@ export default async (request: Request): Promise<Response> => {
 
   let upstreamResponse: Response
   try {
-    upstreamResponse = await fetch(`${upstream.baseUrl}/chat/completions`, {
+    upstreamResponse = await fetch(`${settings.baseUrl}/chat/completions`, {
       method: "POST",
       signal: abort.signal,
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${upstream.apiKey}`,
+        authorization: `Bearer ${settings.apiKey}`,
       },
       body: JSON.stringify({
         model,
@@ -99,7 +99,7 @@ export default async (request: Request): Promise<Response> => {
     })
   } catch (err) {
     clearTimeout(budget)
-    const friendly = explain(err, upstream.baseUrl)
+    const friendly = explain(err, settings.baseUrl)
     return json(friendly, friendly.status)
   }
 
@@ -166,7 +166,7 @@ export default async (request: Request): Promise<Response> => {
             hint: "Netlify caps a streaming function at 60s. Ask for a shorter answer, or lower MAX_TOKENS.",
           })
         } else if (!request.signal.aborted) {
-          const friendly = explain(err, upstream.baseUrl)
+          const friendly = explain(err, settings.baseUrl)
           send({ type: "error", error: friendly.error, hint: friendly.hint })
         }
       } finally {

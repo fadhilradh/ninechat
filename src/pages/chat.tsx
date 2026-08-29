@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { ChatHeader } from "@/components/chat-header"
@@ -9,10 +9,8 @@ import { Sidebar } from "@/components/sidebar"
 import { Transcript } from "@/components/transcript"
 import { Button } from "@/components/ui/button"
 import { useChat } from "@/hooks/use-chat"
-import { useModels } from "@/hooks/use-models"
 import { useSessions } from "@/hooks/use-sessions"
 import { useSettings } from "@/hooks/use-settings"
-import { fetchHealth } from "@/lib/api"
 import type { Attachment } from "@/lib/types"
 
 export function ChatPage() {
@@ -25,71 +23,7 @@ export function ChatPage() {
   /** A message typed before any chat existed, waiting for one to be created. */
   const [pendingSend, setPendingSend] = useState<string | null>(null)
 
-  const models = useModels(settings, settingsReady)
   const chat = useChat({ session: sessions.active, onSessionChanged: sessions.refresh })
-
-  // Adopt the deploy's own gateway settings the first time we run, so a fresh
-  // browser is not left staring at an empty picker -- and so flipping to
-  // Direct mode points at the same gateway the site uses, rather than a
-  // hard-coded guess the user then has to correct.
-  const seededDefault = useRef(false)
-  useEffect(() => {
-    if (!settingsReady || seededDefault.current || settings.defaultModel) return
-    seededDefault.current = true
-    void fetchHealth(settings).then((health) => {
-      if (!health) return
-      update({
-        ...(health.defaultModel ? { defaultModel: health.defaultModel } : {}),
-        ...(health.baseUrl ? { directBaseUrl: health.baseUrl } : {}),
-      })
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settingsReady, settings.defaultModel])
-
-  /**
-   * Settings persist in the browser, so a default saved before the gateway
-   * changed outlives it -- and the picker then shows a model that no longer
-   * exists, which only surfaces as a 404 when you try to send. Once the real
-   * model list is in, drop anything that is not on it.
-   */
-  const healedDefault = useRef(false)
-  useEffect(() => {
-    if (healedDefault.current || models.loading || models.models.length === 0) return
-    if (!settings.defaultModel) return
-    if (models.models.some((m) => m.id === settings.defaultModel)) {
-      healedDefault.current = true
-      return
-    }
-    healedDefault.current = true
-    void fetchHealth(settings).then((health) => {
-      const replacement = health?.defaultModel ?? models.models[0]?.id
-      if (replacement) update({ defaultModel: replacement })
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [models.loading, models.models, settings.defaultModel])
-
-  // A chat with no model cannot send anything; fill it from the defaults, or
-  // from whatever the gateway offered first.
-  const activeId = sessions.activeId
-  const activeModel = sessions.active?.model
-  const patchSession = sessions.patch
-  const firstModelId = models.models[0]?.id
-  const knownModels = models.models
-  useEffect(() => {
-    if (!activeId) return
-
-    // Empty, or pointing at a model this gateway does not serve.
-    const stale =
-      activeModel !== undefined &&
-      activeModel !== "" &&
-      knownModels.length > 0 &&
-      !knownModels.some((m) => m.id === activeModel)
-
-    if (activeModel && !stale) return
-
-    const fallback = settings.defaultModel || firstModelId
-    if (fallback && fallback !== activeModel) void patchSession(activeId, { model: fallback })
-  }, [activeId, activeModel, settings.defaultModel, firstModelId, knownModels, patchSession])
 
   const createSession = sessions.create
   const startChat = useCallback(
@@ -143,10 +77,6 @@ export function ChatPage() {
       <div className="flex min-w-0 flex-1 flex-col">
         <ChatHeader
           session={sessions.active}
-          models={models.models}
-          modelsLoading={models.loading}
-          modelsError={models.error}
-          onReloadModels={models.reload}
           onPatchSession={(patch) => {
             if (sessions.activeId) void sessions.patch(sessions.activeId, patch)
           }}
@@ -197,7 +127,7 @@ export function ChatPage() {
 
       <DeferredSend
         text={pendingSend}
-        ready={Boolean(sessions.active?.model)}
+        ready={Boolean(sessions.activeId)}
         onSend={(text) => {
           setPendingSend(null)
           void chat.send(text, [])

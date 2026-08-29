@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { CheckCircle2, Cloud, Laptop, XCircle } from "lucide-react"
+import { CheckCircle2, XCircle } from "lucide-react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "./confirm-dialog"
@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -20,8 +19,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { fetchHealth, type HealthReport } from "@/lib/api"
 import { clearEverything } from "@/lib/db"
-import type { AppSettings, TransportMode } from "@/lib/types"
-import { cn } from "@/lib/utils"
+import type { AppSettings } from "@/lib/types"
 
 interface SettingsDialogProps {
   open: boolean
@@ -29,50 +27,6 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void
   onUpdate: (patch: Partial<AppSettings>) => void
   onCleared: () => void
-}
-
-const TRANSPORTS: Array<{ id: TransportMode; icon: typeof Cloud; title: string; blurb: string }> = [
-  {
-    id: "proxy",
-    icon: Cloud,
-    title: "Via this site",
-    blurb:
-      "Requests go through the deployed function, which holds the gateway key. Use this when the gateway is reachable from the internet.",
-  },
-  {
-    id: "direct",
-    icon: Laptop,
-    title: "Direct from browser",
-    blurb:
-      "Your browser calls the gateway itself, using a key you paste below. The only option that works with a gateway on your own machine.",
-  },
-]
-
-function GatewayStatus({ checking, health }: { checking: boolean; health: HealthReport | null }) {
-  if (checking) {
-    return <span className="text-muted-foreground">Checking the gateway...</span>
-  }
-  if (health?.ok) {
-    return (
-      <>
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-        <span>
-          Gateway reachable at <code>{health.baseUrl}</code>
-          {health.latencyMs ? ` (${health.latencyMs}ms)` : ""}.
-        </span>
-      </>
-    )
-  }
-  return (
-    <>
-      <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-      <span>
-        {health?.reason === "no-key"
-          ? "No gateway key is configured on the server. Paste your own below, or set GATEWAY_API_KEY on the deploy."
-          : "The server could not reach the gateway. If yours runs on localhost, switch to Direct mode."}
-      </span>
-    </>
-  )
 }
 
 export function SettingsDialog({
@@ -87,109 +41,48 @@ export function SettingsDialog({
   const [confirmWipe, setConfirmWipe] = useState(false)
 
   useEffect(() => {
-    if (!open || settings.transport !== "proxy") {
-      setHealth(null)
-      return
-    }
+    if (!open) return
     setChecking(true)
-    fetchHealth(settings)
+    fetchHealth()
       .then(setHealth)
-      .catch(() => setHealth(null))
       .finally(() => setChecking(false))
-    // Re-probing on every keystroke in the key field would be wasteful.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, settings.transport])
+  }, [open])
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl gap-0 p-0">
+        <DialogContent className="max-w-xl gap-0 p-0">
           <DialogHeader className="p-6 pb-4">
             <DialogTitle>Settings</DialogTitle>
             <DialogDescription>
-              Stored in this browser only. Nothing here is sent anywhere except the gateway you
-              point it at.
+              Stored in this browser only. There is nothing to configure to start chatting.
             </DialogDescription>
           </DialogHeader>
 
           <ScrollArea className="max-h-[65vh]">
             <div className="space-y-6 px-6 pb-6">
-              <section className="space-y-3">
-                <h3 className="text-sm font-semibold">How requests reach the gateway</h3>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {TRANSPORTS.map((transport) => {
-                    const active = settings.transport === transport.id
-                    const Icon = transport.icon
-                    return (
-                      <button
-                        key={transport.id}
-                        type="button"
-                        onClick={() => onUpdate({ transport: transport.id })}
-                        className={cn(
-                          "rounded-lg border p-3 text-left transition-colors",
-                          active ? "border-primary bg-primary/5" : "hover:border-muted-foreground/40"
-                        )}
-                      >
-                        <span className="flex items-center gap-2 text-sm font-medium">
-                          <Icon className={cn("h-4 w-4", active && "text-primary")} />
-                          {transport.title}
-                        </span>
-                        <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                          {transport.blurb}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {settings.transport === "proxy" ? (
-                  <div className="flex items-start gap-2 rounded-md border bg-muted/40 p-3 text-xs">
-                    <GatewayStatus checking={checking} health={health} />
-                  </div>
-                ) : null}
-              </section>
-
-              <Separator />
-
-              <section className="space-y-3">
-                <h3 className="text-sm font-semibold">Gateway</h3>
-
-                {settings.transport === "direct" ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="base-url">Base URL</Label>
-                    <Input
-                      id="base-url"
-                      value={settings.directBaseUrl}
-                      placeholder="https://openrouter.ai/api/v1"
-                      onChange={(event) => onUpdate({ directBaseUrl: event.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Any OpenAI-compatible endpoint. OpenRouter is
-                      <code className="mx-1">https://openrouter.ai/api/v1</code>; a local 9Router
-                      is <code className="mx-1">http://localhost:20128/v1</code>.
-                    </p>
-                  </div>
-                ) : null}
-
-                <div className="space-y-2">
-                  <Label htmlFor="api-key">
-                    API key {settings.transport === "proxy" ? "(optional)" : ""}
-                  </Label>
-                  <Input
-                    id="api-key"
-                    type="password"
-                    autoComplete="off"
-                    value={settings.directApiKey}
-                    placeholder="Paste a key for the gateway above"
-                    onChange={(event) => onUpdate({ directApiKey: event.target.value })}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {settings.transport === "proxy"
-                      ? "Leave blank to use the key configured on the deploy. Set one to bill your own gateway account instead."
-                      : "Required in Direct mode. Kept in this browser and sent only to the base URL above."}
-                  </p>
-                </div>
-              </section>
+              <div className="flex items-start gap-2 rounded-lg border bg-muted/40 p-3 text-xs">
+                {checking ? (
+                  <span className="text-muted-foreground">Checking the service...</span>
+                ) : health?.ok ? (
+                  <>
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>
+                      Service is up
+                      {health.latencyMs ? ` (${health.latencyMs}ms)` : ""}. Models are chosen
+                      automatically for each message.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                    <span>
+                      The chat service is not responding right now. Nothing you have written is
+                      lost -- try again in a moment.
+                    </span>
+                  </>
+                )}
+              </div>
 
               <Separator />
 
@@ -247,7 +140,7 @@ export function SettingsDialog({
                   <span>
                     Name chats automatically
                     <span className="block text-xs text-muted-foreground">
-                      Costs one short extra call after the first reply.
+                      Uses one short extra request after the first reply.
                     </span>
                   </span>
                   <Switch

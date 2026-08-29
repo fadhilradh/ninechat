@@ -53,7 +53,7 @@ export function ChatHeader({
               <SlidersHorizontal />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="!w-80 p-3">
+          <DropdownMenuContent align="end" className="w-80! p-3">
             <DropdownMenuLabel className="px-0 pt-0">This chat only</DropdownMenuLabel>
             <DropdownMenuSeparator />
 

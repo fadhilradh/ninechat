@@ -87,7 +87,7 @@ export function SessionList({
                   </DropdownMenuTrigger>
                   {/* Nova sizes menus to the trigger by default, and this
                       trigger is a 28px icon button. */}
-                  <DropdownMenuContent align="end" className="!w-44">
+                  <DropdownMenuContent align="end" className="w-44!">
                     <DropdownMenuItem onSelect={() => setRenaming(session)}>
                       <Pencil />
                       Rename
@@ -122,7 +122,7 @@ export function SessionList({
       <ConfirmDialog
         open={deleting !== null}
         title="Delete this chat?"
-        description={`"${deleting?.title ?? ""}" and every message in it will be removed from this browser. This cannot be undone.`}
+        description={`"${deleting?.title ?? ""}" and every message in it will be deleted, from your account as well if you are signed in. This cannot be undone.`}
         confirmLabel="Delete"
         onOpenChange={(open) => !open && setDeleting(null)}
         onConfirm={() => deleting && onDelete(deleting.id)}

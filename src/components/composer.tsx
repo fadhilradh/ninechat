@@ -210,7 +210,7 @@ export function Composer({
             event.preventDefault()
             void addFiles(images)
           }}
-          className="min-h-[38px] resize-none border-0 bg-transparent px-1 py-2 shadow-none focus-visible:ring-0"
+          className="min-h-[38px] resize-none border-0 bg-transparent px-1 py-2 text-sm shadow-none focus-visible:ring-0 md:text-sm"
         />
 
         {busy ? (

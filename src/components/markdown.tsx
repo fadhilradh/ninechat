@@ -83,7 +83,7 @@ export const Markdown = memo(function Markdown({ content, className }: MarkdownP
           table({ children }) {
             return (
               <div className="scrollbar-thin my-3 overflow-x-auto rounded-lg border">
-                <table className="!my-0 w-full text-sm">{children}</table>
+                <table className="my-0! w-full text-sm">{children}</table>
               </div>
             )
           },
